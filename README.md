@@ -1,6 +1,6 @@
 # IAEA_wgsbac-docker
 
-Docker image for the WGSBAC pipeline for Salmonella and Brucella in the context of IAEA-GenPat joint project.
+Docker image for the WGSBAC pipeline for *Salmonella* and *Brucella* in the context of IAEA-GenPat joint project.
 
 ## Index
 
@@ -50,54 +50,124 @@ The dockerized WGSBAC pipeline runs a suite of tools that can be subdivided into
 - Genome annotation
 - Typing
 
-The list of analyses run for *Brucella* and *Salmonella* species and the tools used are available on the official WGSBAC software's GitLab page: <https://gitlab.com/FLI_Bioinfo/WGSBAC#modules>
+The list of analyses run for *Brucella* and *Salmonella* species and the tools used are available on the official WGSBAC software's GitLab page: <https://gitlab.com/FLI_Bioinfo/WGSBAC#modules>. The list of analises available in this dockerized version are listed in the tables below.
+
+- For execution on *Brucella* samples:
+
+| Analysis | Tool/DB |
+| --- | --- |
+| contamination check | `confindr` |
+| coverage calculation | custom script |
+| trimming and QC | `fastp` |
+| raw reads quality check | `fastqc` |
+| contamination check | `kraken2` |
+| Multi Lucus Sequence Typing | `mlst` |
+| QC | `multiQC`, `fastQC` |
+| plasmid identification | `plasmidfinder`/`platon` |
+| assembly QC | Quast |
+| de novo assembly | Shovill |
+| variant calling | Snippy |
+| species identification | Sourmash |
+
+- For execution on *Salmonella* samples:
+
+| Analysis | Tool/DB |
+| --- | --- |
+| contamination check | `confindr` |
+| coverage calculation | custom script |
+| trimming and QC | `fastp` |
+| raw reads quality check | `fastqc` |
+| contamination check | `kraken2` |
+| Multi Lucus Sequence Typing | `mlst` |
+| QC | `multiQC`, `fastQC` |
+| plasmid identification | `plasmidfinder`/`platon` |
+| assembly QC | Quast |
+| de novo assembly | Shovill |
+| variant calling | Snippy |
+| species identification | Sourmash |
+| virulence genes identification | SPI |
+| Salmonella serotype prediction | `seqSero` |
+| Salmonella serovar prediction | `sistr` |
 
 ## Requirements
 
 - `wgsbac_env_20250210.yml` (configuration file of the main environment);
 - `envs.zip` (archive of configuration files for `wgsbac.pl`'s tools);
-- Docker and its relevant dependencies:
-
-	> In GNU-Linux (Ubuntu):
-	>	```
-	>	docker.io
-	>	docker-compose
-	>	docker-buildx
-	>	```
-
-- `git` (optional, if cloning this repo)
+- Docker and its relevant dependencies;
+- access to `kraken2` and `confindr` databases (they need to be provided as directories on the host system);
+- `git` (optional, if cloning this repo).
 
 Dependencies for `wgsbac.pl` (<https://gitlab.com/FLI_Bioinfo/WGSBAC#install-wgsbac>) are managed inside the container and dealt with through the `wgsbac_env_20250210.yml` and `envs.zip` files, during build. 
 
 ## Installation
 
-1. Clone repository:
+- **Clone repository:**
 
 ```bash
+# clone repo
 git clone https://github.com/genpat-it/iaea_wgsbac-docker.git
+
+# move into repository directory
+cd iaea_wgsbac-docker/
+## check contents
+ls
+Dockerfile  envs.zip  LICENSE  README.md  wgsbac_env_20250210.yml
 ```
 
-2. Build Docker:
+- **Build Docker:**
 
 ```bash
-cd iaea_wgsbac-docker/
-ls 
+# docker build command
+docker build -t wgsbac:1.0 .
 ```
+
+> **NOTE: the docker has steps to clone some necessary databases and the wgsbac repository in the container's context. This will take some time to execute and also requires ~11GB of disk space for the final image.**
 
 ## How to run
 
-## Acknowledgement
+After building, you can run the container with:
+
+```bash
+docker run --rm -it -v $(pwd):/wd wgsbac:1.0
+```
+
+To run the whole pipeline, provide the desired `wgsbac` command after the `docker run` call. Please follow [instructions on WGSABAC's official GitLab](https://gitlab.com/FLI_Bioinfo/WGSBAC#running-wgsbac) to build the desired command for the species of interest. Below you'll find examples of full analysis for the 2 supported species:
+
+- for *Brucella*:
+
+```bash
+docker run --rm -it -v $(pwd):/wd wgsbac:1.0 wgsbac.pl --table metadata_brucella.tsv --results test_brucella --kraken minikraken_8GB_20200312 --mlst brucella --virulence --conf confindr --snippy --plasmid --cpus 100 --run
+```
+
+- for *Salmonella*:
+
+```bash
+docker run --rm -it -v $(pwd):/wd wgsbac:1.0 wgsbac.pl --table metadata_salmonella.tsv --results test_salmonella --kraken minikraken_8GB_20200312 --mlst senterica --seqsero --sistr --amr --amrorganism Salmonella --virulence --spi --conf confindr --snippy --plasmid --cpus 100 --run
+```
+
+> **NOTE 1:** `kraken2` and `confindr` databases **are not** cooked inside the container: ensure you have access to them (especially `confinder`'s full version) because they are needed to run the most basic analysis possible with `wgsbac.pl`.
+
+> **NOTE 2:** remember to map necessary directories with Docker's `-v` option: if external databases (`confindr` and `kraken2`) are not in the working directory, ensure the container can read their directories and that correct paths are provided.
 
 ## Final Notes
-    Per la build il Docker necessita del file di configurazione wgsbac_env_20250210.yml, in modo da creare l'ambiente Conda nel container;
-    Per preparare gli ambienti Conda dei singoli tools, il Docker necessita dei rispettivi files di configurazione (contenuti nell'archivio envs.zip);
-    Alla build il Docker effettuerà il git clone della pipeline WGSBAC dal GitLab ufficiale e il download e update dei seguenti databases:
-        bakta_db_light_250210
-        amrfinderplus-db
-        Platon
-        SPI (spis_ibiz_database)
-    I databases di kraken2 e confindr sono necessari per l'esecuzione della pipeline ma non sono cucinati nel Docker: vanno mappati con -v;
-    Lo script R custom "table2itol.R" è spento perchè causava errori e non è di interesse;
-    Le analisi funzionanti e testate sono solo quelle di interesse per il progetto o per Genpat, e solo per gli organismi Salmonella e Brucella.
 
-I comandi passati al Docker vengono eseguiti nell'environment Conda creato (wgsbac).
+- The following 2 files are necessary because of how the original WGSBAC software needs to be installed (https://gitlab.com/FLI_Bioinfo/WGSBAC#install-wgsbac) and because of how it runs different tools:
+	- `wgsbac_env_20250210.yml` is a Conda configuration file, needed to automatically create the main `wgsbac` Conda environment in the Docker;
+	- `envs.zip` is an archive containing Conda configuration files for each tool used by `wgsbac.pl`.
+- During build, the Docker will git clone the WGSBAC pipeline from the official GitLab page and it will update the following databases, cooked in the container:
+	- `bakta_db_light_250210`
+	- `amrfinderplus-db`
+	- `Platon`
+	- SPI (`spis_ibiz_database`)
+- `kraken2` and `confindr` databases are necessary for the pipeline execution, but are not cooked in the Docker container, so they need to be mapped with the `-v` flag;
+- The custom Rscript `table2itol.R` is disabled through commands run in the Dockerfile. If you wish to turn it on again, just delete or comment lines 46 and 47 of the Dockerfile;
+- Only analysis relevant for this project (*i.e.* for *Salmonella* and *Brucella*) will work, since those are the only ones that have been set up and tested:
+- All commands passed to the container will be executed in the created Conda environment (`wgsbac`).
+
+## Acknowledgements
+
+This is not an official Docker release of the WGSBAC pipeline.
+
+GenPat's bioinformatics group has no control nor rights over the WGSBAC sofware, except for the permissions granted by its authors through the provided license. The Docker for such pre-existing software is provided with WGSBAC's original license.
+
+The group sincerely thanks the author Jörg Linde for their kind support during development of this piece of software.
