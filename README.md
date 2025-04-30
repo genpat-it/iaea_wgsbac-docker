@@ -50,7 +50,7 @@ The dockerized WGSBAC pipeline runs a suite of tools that can be subdivided into
 - Genome annotation
 - Typing
 
-The list of analyses run for *Brucella* and *Salmonella* species and the tools used are available on the official WGSBAC software's GitLab page: <https://gitlab.com/FLI_Bioinfo/WGSBAC#modules>. The list of analises available in this dockerized version are listed in the tables below.
+The list of analyses run for *Brucella* and *Salmonella* species and the tools used are available on the official WGSBAC software's GitLab page: <https://gitlab.com/FLI_Bioinfo/WGSBAC#modules>. The list of analyses available in this dockerized version are listed in the tables below.
 
 - For execution on *Brucella* samples:
 
@@ -68,6 +68,7 @@ The list of analyses run for *Brucella* and *Salmonella* species and the tools u
 | de novo assembly | Shovill |
 | variant calling | Snippy |
 | species identification | Sourmash |
+| Anti-Micorbial Resistance (AMR) detection | AMRFinderPlus |
 
 - For execution on *Salmonella* samples:
 
@@ -85,6 +86,7 @@ The list of analyses run for *Brucella* and *Salmonella* species and the tools u
 | de novo assembly | Shovill |
 | variant calling | Snippy |
 | species identification | Sourmash |
+| Anti-Micorbial Resistance (AMR) detection | AMRFinderPlus |
 | virulence genes identification | SPI |
 | Salmonella serotype prediction | `seqSero` |
 | Salmonella serovar prediction | `sistr` |
