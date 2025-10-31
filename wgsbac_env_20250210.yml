@@ -333,7 +333,7 @@ dependencies:
   - wheel=0.45.1=pyhd8ed1ab_1
   - wrapt=1.17.2=py311h9ecbd09_0
   - xopen=2.0.2=pyh707e725_2
-  - xz=5.4.6=h5eee18b_1
+  - xz=5.4.4
   - yaml=0.2.5=h7f98852_2
   - yaml-cpp=0.8.0=h6a678d5_1
   - yarl=1.18.3=py311h2dc5d0c_1
